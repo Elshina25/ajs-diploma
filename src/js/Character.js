@@ -19,6 +19,10 @@ export default class Character {
     this.defence = 0;
     this.health = 50;
     this.type = type;
-    // TODO: выбросите исключение, если кто-то использует "new Character()"
+    
+
+    if (new.target) {
+      throw new Error('Персонажи создаются через свои классы!');
+    }
   }
 }
