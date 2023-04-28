@@ -44,3 +44,4 @@ test('drawning center border at gameplay', () => {
   const result = calcTileType(35, 8);
   expect(result).toEqual('center');
 });
+

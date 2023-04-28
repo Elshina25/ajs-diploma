@@ -21,7 +21,7 @@ export default class Character {
     this.type = type;
     
 
-    if (new.target) {
+    if (new.target === Character) {
       throw new Error('Персонажи создаются через свои классы!');
     }
   }

@@ -1,3 +1,4 @@
+
 /**
  * Класс, представляющий персонажей команды
  *
@@ -12,5 +13,7 @@
  * ```
  * */
 export default class Team {
-  // TODO: write your logic here
+  constructor(characters) {
+     this.team = characters;
+  }
 }
