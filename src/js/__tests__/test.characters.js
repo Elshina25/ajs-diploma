@@ -46,3 +46,8 @@ test('error maxlevel', () => {
 //   const func = generateTeam(arr, 3, 3);
 //   expect(func.next().value).toEqual([Bowman, Swordsman, Magician])
 // });
+
+test('team quantity', () => {
+  const team = generateTeam([Bowman, Swordsman, Magician], 3, 3).next().value;
+  expect(team.length).toEqual(3);
+})

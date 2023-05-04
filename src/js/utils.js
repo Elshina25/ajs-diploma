@@ -22,7 +22,7 @@
  * calcTileType(7, 7); // 'left'
  * ```
  * */
-export function calcTileType(index, boardSize) {
+export function calcTileType(index) {
   if (index === 0) {
     return 'top-left';
   } if (index === 7) {

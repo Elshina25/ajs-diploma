@@ -14,6 +14,6 @@
  * */
 export default class Team {
   constructor(characters) {
-     this.team = characters;
+     this.characters = characters.next().value;
   }
 }

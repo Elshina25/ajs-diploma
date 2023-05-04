@@ -1,5 +1,11 @@
 import Character from './Character';
-import GamePlay from './GamePlay';
+import Daemon from './characters/Daemon';
+import Magician from './characters/Magician';
+import Vampire from './characters/Vampire';
+import Bowman from './characters/Bowman';
+import Swordsman from './characters/Swordsman';
+import Undead from './characters/Undead';
+
 
 export default class PositionedCharacter {
   constructor(character, position) {

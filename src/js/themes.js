@@ -1,8 +1,17 @@
-const themes = {
-  prairie: 'prairie',
-  desert: 'desert',
-  arctic: 'arctic',
-  mountain: 'mountain',
-};
+export default function themes(level) {
+  switch(level) {
+    case 2: return 'desert';
+    case 3: return 'arctic';
+    case 4: 'mountain';
+    default: return 'prairie'
+  }
+}
 
-export default themes;
+// const themes = {
+//   prairie: 'prairie',
+//   desert: 'desert',
+//   arctic: 'arctic',
+//   mountain: 'mountain',
+// };
+
+

@@ -14,14 +14,16 @@
  */
 export default class Character {
   constructor(level, type = 'generic') {
+    this.health = 50;
     this.level = level;
+    this.type = type;
     this.attack = 0;
     this.defence = 0;
-    this.health = 50;
-    this.type = type;
+    
+    
     
 
-    if (new.target === Character) {
+    if (new.target.name === Character) {
       throw new Error('Персонажи создаются через свои классы!');
     }
   }

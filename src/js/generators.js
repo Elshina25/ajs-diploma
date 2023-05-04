@@ -1,10 +1,3 @@
-// import Daemon from '/characters/Daemon';
-// import Magician from '/characters/Magician';
-// import Vampire from '/characters/Vampire';
-// import Bowman from '/characters/Bowman';
-// import Swordsman from '/characters/Swordsman';
-// import Undead from '/characters/Undead';
-// import Character from 'Character';
 import Team from './Team';
 
 /**
@@ -39,13 +32,30 @@ export function* generateTeam(allowedTypes, maxLevel, characterCount) {
   if (maxLevel > 4) {
     throw new Error('Максимальный уровень 4!');
   } 
-  
-  const characters = [];
 
-  let i = 1;
-  while (i <= characterCount) {
+  const characters = [];
+  
+  for (let i = 1; i <= characterCount; i += 1) {
     characters.push(characterGenerator(allowedTypes, maxLevel).next().value);
-    i += 1;
   }
-  return new Team(characters)
+  return characters
 }
+
+export function* generateRandomPosition(positions) {
+  let currentIndex = positions.length;
+  let temporaryValue;
+  let randomIndex;
+
+  const shuffledArray = positions.slice();
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+    temporaryValue = shuffledArray[currentIndex];
+    shuffledArray[currentIndex] = shuffledArray[randomIndex];
+    shuffledArray[randomIndex] = temporaryValue;
+  }
+  for (let i = 0; i < shuffledArray.length; i += 1) {
+    yield shuffledArray[i];
+  }
+}
+
