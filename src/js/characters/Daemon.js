@@ -6,7 +6,9 @@ export default class Daemon extends Character {
         this.defence = defence;
         this.type = type;
         this.health = health;
-        this.level = level;  
+        this.level = level; 
+        this.move = 1;
+        this.attackDistance = 4; 
 
         if (level > 4) {
             throw new Error('Максимальный уровень 4!');

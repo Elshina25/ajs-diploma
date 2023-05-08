@@ -7,6 +7,8 @@ export default class Magician extends Character {
         this.type = type;
         this.health = health;
         this.level = level;
+        this.move = 1;
+        this.attackDistance = 4; 
 
         if (level > 4) {
             throw new Error('Максимальный уровень 4!');
