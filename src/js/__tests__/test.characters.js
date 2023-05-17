@@ -14,7 +14,7 @@ test.each([
   [new Swordsman(1)],
   [new Undead(1)],
   [new Vampire(1)],
-])(('Корректное создание персонажей'), (char) => {
+])(('Correct characters creation'), (char) => {
   expect(() => char).not.toThrow();
 });
 
@@ -36,11 +36,12 @@ test('error maxlevel', () => {
   }).toThrow('Максимальный уровень 4!');
 });
 
-// test('create team', () => {
-//   const arr = [Bowman, Swordsman, Magician];
-//   const func = generateTeam(arr, 3, 3);
-//   expect(func.next().value).toEqual([Bowman, Swordsman, Magician])
-// });
+test('correct maxlevel', () => {
+  const team = generateTeam([Daemon, Bowman, Magician], 3, 3).next().value;
+  const maxlevel = team.every(item => item.level <= 3);
+  expect(maxlevel).toBeTruthy();
+  
+})
 
 test('team quantity', () => {
   const team = generateTeam([Bowman, Swordsman, Magician], 3, 3).next().value;
