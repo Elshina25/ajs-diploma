@@ -19,6 +19,10 @@ export default class GameController {
     this.boardSize = gamePlay.boardSize;
     this.userCharacters = [Bowman, Swordsman, Magician];
     this.botCharacters = [Daemon, Vampire, Undead];
+    this.generateUserTeam = generateTeam(this.userCharacters, this.level, 3).next().value;
+    this.generateBotTeam = generateTeam(this.botCharacters, this.level, 3).next().value;
+    this.playerPosition = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57];
+    this.enemyPosition = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 62, 63];
     this.userTeam = [];
     this.botTeam = [];
     this.level = 1;
@@ -35,39 +39,10 @@ export default class GameController {
       this.gamePlay.drawUi(themes(4));
     }
 
-    const playerTeam = generateTeam(this.userCharacters, this.level, 3).next().value;
-    const enemyTeam = generateTeam(this.botCharacters, this.level, 3).next().value;
-    const playerPosition = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57];
-    const enemyPosition = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 62, 63];
+    this.userTeam = this.positionedTeam(this.generateUserTeam, this.playerPosition);
+    this.botTeam = this.positionedTeam(this.generateBotTeam, this.enemyPosition);
 
-    function* generatePosition(positions) {
-      const randomPosition = positions[Math.floor(Math.random() * positions.length)];
-      yield randomPosition;
-    }
-
-    function positionedTeam(team, positions) {
-      const positioned = [];
-      for (const character of team) {
-        const obj = new PositionedCharacter(character, generatePosition(positions).next().value);
-        positioned.push(obj);
-      }
-
-      for (let i = 0; i < positioned.length; i += 1) {
-        for (let j = i + 1; j < positioned.length; j += 1) {
-          if (positioned[i].position === positioned[j].position) {
-            positioned[i].position = generatePosition(positions).next().value;
-          }
-        }
-      }
-      return positioned;
-    }
-
-    const playerPositionedTeam = positionedTeam(playerTeam, playerPosition);
-    const enemyPositionedTeam = positionedTeam(enemyTeam, enemyPosition);
-    this.userTeam = playerPositionedTeam;
-    this.botTeam = enemyPositionedTeam;
-
-    this.gamePlay.redrawPositions([...playerPositionedTeam, ...enemyPositionedTeam]);
+    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
 
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
@@ -79,6 +54,28 @@ export default class GameController {
   }
   // TODO: add event listeners to gamePlay events
   // TODO: load saved stated from stateService
+
+  generatePosition(positions) {
+    const randomPosition = positions[Math.floor(Math.random() * positions.length)];
+    return randomPosition;
+  }
+
+  positionedTeam(team, positions) {
+    const positioned = [];
+    for (const character of team) {
+      const obj = new PositionedCharacter(character, this.generatePosition(positions));
+      positioned.push(obj);
+    }
+
+    for (let i = 0; i < positioned.length; i += 1) {
+      for (let j = i + 1; j < positioned.length; j += 1) {
+        if (positioned[i].position === positioned[j].position) {
+          positioned[i].position = this.generatePosition(positions);
+        }
+      }
+    }
+    return positioned;
+  }
 
   // метод, возвращающий любого персонажа на определенной позиции
   getCharPos(index) {
@@ -182,27 +179,26 @@ export default class GameController {
     return false
   }
 
-  //удаление персонажа с поля в случае потери здоровья
-  deleteChar(index) {
-    const pos = [...this.userTeam, ...this.botTeam];
-    pos.splice(pos.indexOf(this.getCharPos(index)), 1);
-  }
+  //удаление персонажа с поля
+  // deleteChar(index) {
+  //   const pos = [...this.userTeam, ...this.botTeam];
+  //   pos.splice(pos.indexOf(this.getCharPos(index)), 1);
+  // }
 
   //атака персонажа
   characterAttack(index) {
     if (this.gameState.userTurn) {
-      const user = this.getCharPos(this.gameState.selected).character;
-      const bot = this.getCharPos(index).character;
-      const damage = Math.max(user.attack - bot.defence, user.attack * 0, 1);
-      if (this.userTeam.length === 0 || this.botTeam.length === 0) {
-        return
-      }
+      const user = this.getCharPos(this.gameState.selected);
+      const bot = this.getCharPos(index);
+      const damage = Math.max(user.character.attack - bot.character.defence, user.character.attack * 0.1);
+      // if (this.userTeam.length === 0 || this.botTeam.length === 0) {
+      //   return
+      // }
 
       this.gamePlay.showDamage(index, damage)
         .then(() => {
-          bot.health -= damage;
-          if (bot.health <= 0) {
-            this.deleteChar(index);
+          bot.character.health -= damage;
+          if (bot.character.health <= 0) {
             this.botTeam.splice(this.botTeam.indexOf(bot), 1);
           }
         })
@@ -220,7 +216,7 @@ export default class GameController {
 
   //атака и перемещение бота
   botAttack() {
-    if (this.gameState.userTur) {
+    if (this.gameState.userTurn) {
       return
     }
     let bot = null;
@@ -237,13 +233,12 @@ export default class GameController {
     })
 
     if (user) {
-      const damage = Math.max(bot.character.attack - user.character.defence, bot.character.attack * 0, 1);
+      const damage = Math.max(bot.character.attack - user.character.defence, bot.character.attack * 0.1);
       this.gamePlay.showDamage(user.position, damage)
         .then(() => {
           user.character.health -= damage;
           if (user.character.health <= 0) {
-            this.deleteChar(user.position);
-            this.userTeam.splice(this.userTeam.indexOf(user.character), 1);
+            this.userTeam.splice(this.userTeam.indexOf(user), 1);
             this.gamePlay.deselectCell(this.gameState.selected);
             this.gameState.selected = null;
           }
@@ -269,11 +264,17 @@ export default class GameController {
         bot.position = botPosition;
         this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
         this.gameState.userTurn = true;
-    }
-
-
+    };
   }
 
+  // levelUpGame() {
+  //   this.userTeam = [];
+  //   this.botTeam = [];
+  //   this.generateUserTeam.forEach(el => el.levelUp());
+
+  //}
+
+  
   onCellClick(index) {
     // выделение выбранного персонажа команды игрока
     if (this.getCharPos(index) && this.isUserCharacter(index)) {
