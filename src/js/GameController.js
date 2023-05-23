@@ -20,7 +20,7 @@ export default class GameController {
     this.boardSize = gamePlay.boardSize;
     this.userCharacters = [Bowman, Swordsman, Magician];
     this.botCharacters = [Daemon, Vampire, Undead];
-    this.generateUserTeam = generateTeam(this.userCharacters, this.level, 3).next().value;
+    this.generateUserTeam = generateTeam(this.userCharacters, this.level, 3).next().value;;
     this.generateBotTeam = generateTeam(this.botCharacters, this.level, 3).next().value;
     this.playerPosition = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57];
     this.enemyPosition = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 62, 63];
@@ -48,6 +48,7 @@ export default class GameController {
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
     this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
+    this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
 
     if (this.level === 5 || this.userTeam.length === 0) {
       return;
@@ -62,11 +63,12 @@ export default class GameController {
   }
 
   positionedTeam(team, positions) {
+    const positionsForSplice = [...positions];
     const positioned = [];
     for (const character of team) {
-      const position = this.generatePosition(positions);
+      const position = this.generatePosition(positionsForSplice);
       positioned.push(new PositionedCharacter(character, position));
-      positions.splice(positions.indexOf(position), 1);
+      positionsForSplice.splice(positionsForSplice.indexOf(position), 1);
     }
     return positioned;
   }
@@ -300,7 +302,23 @@ export default class GameController {
     this.userTeam = this.positionedTeam(this.generateUserTeam, this.playerPosition);
     this.botTeam = this.positionedTeam(this.generateBotTeam, this.enemyPosition);
     this.gamePlay.drawUi(themes(this.level));
-    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam])
+    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+  }
+
+  onNewGameClick() {
+    this.gamePlay.drawUi(themes(this.level));
+    this.generateUserTeam = [];
+    this.generateBotTeam = [];
+    this.generateUserTeam = generateTeam(this.userCharacters, this.level, 3).next().value;
+    this.generateBotTeam = generateTeam(this.botCharacters, this.level, 3).next().value;
+    this.gameState = new GameState();
+
+    this.userTeam = this.positionedTeam(this.generateUserTeam, this.playerPosition);
+    this.botTeam = this.positionedTeam(this.generateBotTeam, this.enemyPosition);
+
+ 
+    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+    GamePlay.showMessage(`Уровень ${this.level}`);
   }
 
   
