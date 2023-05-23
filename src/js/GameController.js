@@ -10,6 +10,7 @@ import Undead from './characters/Undead';
 // import Character from './Character';
 // import Team from './Team';
 import { generateTeam } from './generators';
+import { characterGenerator } from './generators';
 import GameState from './GameState';
 
 export default class GameController {
@@ -63,16 +64,9 @@ export default class GameController {
   positionedTeam(team, positions) {
     const positioned = [];
     for (const character of team) {
-      const obj = new PositionedCharacter(character, this.generatePosition(positions));
-      positioned.push(obj);
-    }
-
-    for (let i = 0; i < positioned.length; i += 1) {
-      for (let j = i + 1; j < positioned.length; j += 1) {
-        if (positioned[i].position === positioned[j].position) {
-          positioned[i].position = this.generatePosition(positions);
-        }
-      }
+      const position = this.generatePosition(positions);
+      positioned.push(new PositionedCharacter(character, position));
+      positions.splice(positions.indexOf(position), 1);
     }
     return positioned;
   }
@@ -179,22 +173,13 @@ export default class GameController {
     return false
   }
 
-  //удаление персонажа с поля
-  // deleteChar(index) {
-  //   const pos = [...this.userTeam, ...this.botTeam];
-  //   pos.splice(pos.indexOf(this.getCharPos(index)), 1);
-  // }
-
   //атака персонажа
   characterAttack(index) {
-    if (this.gameState.userTurn) {
-      const user = this.getCharPos(this.gameState.selected);
-      const bot = this.getCharPos(index);
-      const damage = Math.max(user.character.attack - bot.character.defence, user.character.attack * 0.1);
-      // if (this.userTeam.length === 0 || this.botTeam.length === 0) {
-      //   return
-      // }
+    const user = this.getCharPos(this.gameState.selected);
+    const bot = this.getCharPos(index);
+    const damage = Math.max(user.character.attack - bot.character.defence, user.character.attack * 0.1);
 
+    if (this.gameState.userTurn) {
       this.gamePlay.showDamage(index, damage)
         .then(() => {
           bot.character.health -= damage;
@@ -206,12 +191,15 @@ export default class GameController {
           this.gamePlay.redrawPositions([...this.userTeam, ... this.botTeam]);
         })
       .then(() => {
-      //this.gameState.getResult();
+        this.getResult();
         this.botAttack();
       })
-
+      
+      this.gameState.points += damage;
       this.gameState.userTurn = false;
     }
+    
+    
   }
 
   //атака и перемещение бота
@@ -230,7 +218,11 @@ export default class GameController {
           user = item;
         }
       })
-    })
+    });
+
+    if (this.userTeam.length === 0 || this.botTeam.length === 0) {
+      return
+    }
 
     if (user) {
       const damage = Math.max(bot.character.attack - user.character.defence, bot.character.attack * 0.1);
@@ -247,9 +239,9 @@ export default class GameController {
           this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
           this.gameState.userTurn = true;
         })
-      // .then(() => {
-      //   this.gameState.getResult();
-      // })
+      .then(() => {
+        this.getResult();
+      })
     } else {
         bot = this.botTeam[Math.floor(Math.random() * this.botTeam.length)];
         const botMove = this.calcMoveAttack(bot.position, bot.character.move);
@@ -267,12 +259,49 @@ export default class GameController {
     };
   }
 
-  // levelUpGame() {
-  //   this.userTeam = [];
-  //   this.botTeam = [];
-  //   this.generateUserTeam.forEach(el => el.levelUp());
+  getResult() {
+    if (this.userTeam.length === 0) {
+      this.gameState.statistics.push(this.gameState.points);
+      GamePlay.showMessage(`Потрачено!:) Количество набранных очков за игру: ${this.gameState.points}`);
+    } if (this.botTeam.length === 0 && this.level === 4) {
+      this.gameState.statistics.push(this.gameState.points);
+      GamePlay.showMessage(`Вы выиграли! Количество набранных очков за игру: ${this.gameState.points}, Ваш личный рекорд: ${Math.max(...this.gameState.statistics)}`);
+    } if (this.botTeam.length === 0 && this.level <= 3) {
+      this.gameState.statistics.push(this.gameState.points);
+      GamePlay.showMessage(`Уровень ${this.level} пройден! Заработанные очки: ${this.gameState.points}`);
+      this.levelUpGame();
+    }
+  }
 
-  //}
+  // переход на другой уровень
+  levelUpGame() {
+    this.level += 1;
+    this.generateUserTeam.forEach(el => {
+      if (el.health > 2) {
+        el.levelUp();
+      } else {
+        this.generateUserTeam.splice(this.generateUserTeam.indexOf(el), 1);
+      }
+    });
+
+    if (this.level === 2) {
+      this.generateUserTeam.push(characterGenerator(this.userCharacters, 2).next().value);
+      this.generateBotTeam = generateTeam(this.botCharacters, 2, this.generateUserTeam.length).next().value;
+    } if (this.level === 3) {
+      this.generateUserTeam.push(characterGenerator(this.userCharacters, 3).next().value);
+      this.generateBotTeam = generateTeam(this.botCharacters, 3, this.generateUserTeam.length).next().value;
+    } if (this.level === 4) {
+      this.generateUserTeam.push(characterGenerator(this.userCharacters, 4).next().value);
+      this.generateBotTeam = generateTeam(this.botCharacters, 4, this.generateUserTeam.length).next().value;
+    }
+
+
+    GamePlay.showMessage(`Уровень ${this.level}`);
+    this.userTeam = this.positionedTeam(this.generateUserTeam, this.playerPosition);
+    this.botTeam = this.positionedTeam(this.generateBotTeam, this.enemyPosition);
+    this.gamePlay.drawUi(themes(this.level));
+    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam])
+  }
 
   
   onCellClick(index) {
