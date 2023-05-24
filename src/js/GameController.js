@@ -20,10 +20,8 @@ export default class GameController {
     this.boardSize = gamePlay.boardSize;
     this.userCharacters = [Bowman, Swordsman, Magician];
     this.botCharacters = [Daemon, Vampire, Undead];
-    this.generateUserTeam = generateTeam(this.userCharacters, this.level, 3).next().value;;
+    this.generateUserTeam = generateTeam(this.userCharacters, this.level, 3).next().value;
     this.generateBotTeam = generateTeam(this.botCharacters, this.level, 3).next().value;
-    this.playerPosition = [0, 1, 8, 9, 16, 17, 24, 25, 32, 33, 40, 41, 48, 49, 56, 57];
-    this.enemyPosition = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 62, 63];
     this.userTeam = [];
     this.botTeam = [];
     this.level = 1;
@@ -40,27 +38,57 @@ export default class GameController {
       this.gamePlay.drawUi(themes(4));
     }
 
-    this.userTeam = this.positionedTeam(this.generateUserTeam, this.playerPosition);
-    this.botTeam = this.positionedTeam(this.generateBotTeam, this.enemyPosition);
+    this.userTeam = this.positionedTeam(this.generateUserTeam, this.userStartPositions());
+    this.botTeam = this.positionedTeam(this.generateBotTeam, this.botStartPositions());
+    this.gameState.positions = [...this.userTeam, ...this.botTeam];
 
-    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+    this.gamePlay.redrawPositions(this.gameState.positions);
 
     this.gamePlay.addCellEnterListener(this.onCellEnter.bind(this));
     this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
     this.gamePlay.addCellLeaveListener(this.onCellLeave.bind(this));
     this.gamePlay.addNewGameListener(this.onNewGameClick.bind(this));
+    this.gamePlay.addLoadGameListener(this.onLoadGameClick.bind(this));
+    this.gamePlay.addSaveGameListener(this.onSaveGameClick.bind(this));
 
     if (this.level === 5 || this.userTeam.length === 0) {
       return;
     }
   }
-  // TODO: add event listeners to gamePlay events
-  // TODO: load saved stated from stateService
+ 
+  //метод, возвращающий массив возможных стартовых позиций персонажей пользователя
+  userStartPositions() {
+    let startPositions = [];
+    for (let i = 0, j = 1; startPositions.length < this.boardSize * 2; i += this.boardSize, j += this.boardSize) {
+      startPositions.push(i, j);
+    }
+    return startPositions
+  }
 
+  //метод, возвращающий массив возможных стартовых позиций персонажей бота
+  botStartPositions() {
+    let startPositions = [];
+    for (let i = this.boardSize - 2, j = this.boardSize - 1; startPositions.length < this.boardSize * 2; i += this.boardSize, j += this.boardSize) {
+      startPositions.push(i, j);
+    }
+    return startPositions
+  }
+
+  //метод, возвращающий случайную позицию из списка возможных
   generatePosition(positions) {
     const randomPosition = positions[Math.floor(Math.random() * positions.length)];
     return randomPosition;
   }
+
+  //метод, создающий массив персонажей на определенных позициях из списка возможных для хранения в GameState
+  // positionedToGamestate(team, positions) {
+  //   const positionsForSplice = [...positions];
+  //   for (const character of team) {
+  //     const position = this.generatePosition(positionsForSplice);
+  //     this.gameState.positions.push(new PositionedCharacter(character, position));
+  //     positionsForSplice.splice(positionsForSplice.indexOf(position), 1);
+  //   }
+  // }
 
   positionedTeam(team, positions) {
     const positionsForSplice = [...positions];
@@ -70,17 +98,17 @@ export default class GameController {
       positioned.push(new PositionedCharacter(character, position));
       positionsForSplice.splice(positionsForSplice.indexOf(position), 1);
     }
-    return positioned;
+    return positioned
   }
 
   // метод, возвращающий любого персонажа на определенной позиции
   getCharPos(index) {
-    return [...this.userTeam, ... this.botTeam].find(el => el.position === index);
+    return this.gameState.positions.find(el => el.position === index);
   }
 
   // метод возвращает выбранного персонажа на определенной позиции и записывает эту позицию в свойство selected в GameState
   getSelectedCharPos() {
-    return [...this.userTeam, ... this.botTeam].find(el => el.position === this.gameState.selected)
+    return this.gameState.positions.find(el => el.position === this.gameState.selected)
   }
 
   //проверка принадлежности персонажа пользователю
@@ -92,6 +120,7 @@ export default class GameController {
     return false
   }
 
+  //проверка принадлежности персонажа боту
   isBotCharacter(index) {
     if (this.getCharPos(index)) {
       const character = this.getCharPos(index).character;
@@ -158,7 +187,7 @@ export default class GameController {
   characterMove(index) {
     this.getSelectedCharPos().position = index;
     this.gamePlay.deselectCell(this.gameState.selected);
-    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+    this.gamePlay.redrawPositions(this.gameState.positions);
     this.gameState.selected = index;
     this.gamePlay.selectCell(this.gameState.selected, 'yellow');
     this.gameState.userTurn = false;
@@ -190,7 +219,7 @@ export default class GameController {
           }
         })
         .then(() => {
-          this.gamePlay.redrawPositions([...this.userTeam, ... this.botTeam]);
+          this.gamePlay.redrawPositions(this.gameState.positions);
         })
       .then(() => {
         this.getResult();
@@ -238,7 +267,7 @@ export default class GameController {
           }
         })
         .then(() => {
-          this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+          this.gamePlay.redrawPositions(this.gameState.positions);
           this.gameState.userTurn = true;
         })
       .then(() => {
@@ -248,7 +277,7 @@ export default class GameController {
         bot = this.botTeam[Math.floor(Math.random() * this.botTeam.length)];
         const botMove = this.calcMoveAttack(bot.position, bot.character.move);
         botMove.forEach(item => {
-          [...this.userTeam, ...this.botTeam].forEach(el => {
+          this.gameState.positions.forEach(el => {
             if (item === el.position) {
               botMove.splice(botMove.indexOf(el.position), 1);
             }
@@ -256,11 +285,12 @@ export default class GameController {
         });
         const botPosition = botMove[Math.floor(Math.random() * botMove.length)];
         bot.position = botPosition;
-        this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+        this.gamePlay.redrawPositions(this.gameState.positions);
         this.gameState.userTurn = true;
     };
   }
 
+  //вывод информации о набранных очках и передача ее в статистику
   getResult() {
     if (this.userTeam.length === 0) {
       this.gameState.statistics.push(this.gameState.points);
@@ -278,13 +308,8 @@ export default class GameController {
   // переход на другой уровень
   levelUpGame() {
     this.level += 1;
-    this.generateUserTeam.forEach(el => {
-      if (el.health > 2) {
-        el.levelUp();
-      } else {
-        this.generateUserTeam.splice(this.generateUserTeam.indexOf(el), 1);
-      }
-    });
+    this.gameState.userTurn = true;
+    this.generateUserTeam.forEach(el => el.levelUp());
 
     if (this.level === 2) {
       this.generateUserTeam.push(characterGenerator(this.userCharacters, 2).next().value);
@@ -299,26 +324,90 @@ export default class GameController {
 
 
     GamePlay.showMessage(`Уровень ${this.level}`);
-    this.userTeam = this.positionedTeam(this.generateUserTeam, this.playerPosition);
-    this.botTeam = this.positionedTeam(this.generateBotTeam, this.enemyPosition);
+    this.userTeam = this.positionedTeam(this.generateUserTeam, this.userStartPositions());
+    this.botTeam = this.positionedTeam(this.generateBotTeam, this.botStartPositions());
     this.gamePlay.drawUi(themes(this.level));
-    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+    this.gamePlay.redrawPositions(this.gameState.positions);
   }
 
+  //запуск новой игры при нажатии на кнопку New Game
   onNewGameClick() {
+    this.level = 1;
     this.gamePlay.drawUi(themes(this.level));
     this.generateUserTeam = [];
     this.generateBotTeam = [];
     this.generateUserTeam = generateTeam(this.userCharacters, this.level, 3).next().value;
     this.generateBotTeam = generateTeam(this.botCharacters, this.level, 3).next().value;
-    this.gameState = new GameState();
+    this.gameState.points = 0;
+    this.gameState.userTurn = true;
+    this.gameState.selected = null;
+    this.gameState.positions = [];
 
-    this.userTeam = this.positionedTeam(this.generateUserTeam, this.playerPosition);
-    this.botTeam = this.positionedTeam(this.generateBotTeam, this.enemyPosition);
+    this.userTeam = this.positionedTeam(this.generateUserTeam, this.userStartPositions());
+    this.botTeam = this.positionedTeam(this.generateBotTeam, this.botStartPositions());
+    this.gameState.positions = [...this.userTeam, ...this.botTeam];
 
  
-    this.gamePlay.redrawPositions([...this.userTeam, ...this.botTeam]);
+    this.gamePlay.redrawPositions(this.gameState.positions);
     GamePlay.showMessage(`Уровень ${this.level}`);
+  }
+
+  //сохранение игры при нажатии на кнопку Save Game
+  onSaveGameClick() {
+    this.stateService.save(GameState.from(this.gameState));
+    GamePlay.showMessage('игра успешно сохранена!');
+  }
+
+  //запуск сохраненной игры при нажатии на кнопку Load Game
+  onLoadGameClick() {
+    GamePlay.showMessage('Загрузка игры...');
+    const load = this.stateService.load();
+    if (!load) {
+      GamePlay.showMessage('Ошибка загрузки!');
+    }
+    this.gameState.statistics = load.statistics;
+    this.gameState.points = load.points;
+    this.gameState.userTurn = load.userTurn;
+    this.gameState.selected = load.selected;
+    this.gameState.positions = [];
+    this.level = load.level;
+    this.generateUserTeam = [];
+    this.generateBotTeam = [];
+
+
+    load.positions.forEach(el => {
+      let pers;
+      switch(el.character.type) {
+        case 'bowman':
+          pers = new Bowman(el.character.level);
+          this.generateUserTeam.push(pers);
+          break;
+        case 'magician':
+          pers = new Magician(el.character.level);
+          this.generateUserTeam.push(pers);
+          break;
+        case 'swordsman':
+          pers = new Swordsman(el.character.level);
+          this.generateUserTeam.push(pers);
+          break;
+        case 'daemon':
+          pers = new Daemon(el.character.level);
+          this.generateBotTeam.push(pers);
+          break;
+        case 'undead':
+          pers = new Undead(el.character.level);
+          this.generateBotTeam.push(pers);
+          break;
+        case 'vampire':
+          pers = new Vampire(el.character.level);
+          this.generateBotTeam.push(pers);
+          break;
+      }
+      pers.health = el.character.health;
+      this.gameState.positions.push(new PositionedCharacter(pers, el.position));
+    });
+    this.gamePlay.drawUi(themes(this.level));
+    this.gamePlay.redrawPositions(this.gameState.positions);
   }
 
   
