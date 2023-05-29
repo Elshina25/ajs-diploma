@@ -14,12 +14,12 @@ test.each([
   [new Swordsman(1)],
   [new Undead(1)],
   [new Vampire(1)],
-])(('Correct characters creation'), (char) => {
-  expect(() => char).not.toThrow();
+])(('Correct characters creation'), (pers) => {
+  expect(() => pers).not.toThrow();
 });
 
 test('error new Character', () => {
-  expect(() => new Character(3, 'daemon')).toThrow('Персонажи создаются через свои классы!');
+  expect(() => new Character(3, 'daemon')).toThrow('Персонажи создаются только через свои классы!');
 });
 
 test('infinity generator characters', () => {
@@ -37,13 +37,12 @@ test('error maxlevel', () => {
 });
 
 test('correct maxlevel', () => {
-  const team = generateTeam([Daemon, Bowman, Magician], 3, 3).next().value;
-  const maxlevel = team.every(item => item.level <= 3);
+  const team = generateTeam([Daemon, Bowman, Magician], 3, 3);
+  const maxlevel = team.every((item) => item.level <= 3);
   expect(maxlevel).toBeTruthy();
-  
-})
+});
 
 test('team quantity', () => {
-  const team = generateTeam([Bowman, Swordsman, Magician], 3, 3).next().value;
+  const team = generateTeam([Bowman, Swordsman, Magician], 3, 3);
   expect(team.length).toEqual(3);
 });

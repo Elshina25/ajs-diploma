@@ -14,23 +14,23 @@
  */
 export default class Character {
   constructor(level, type = 'generic') {
-    this.health = 50;
     this.level = level;
-    this.type = type;
+    this.health = 50;
     this.attack = 0;
     this.defence = 0;
+    this.type = type;
 
     if (new.target === Character) {
-      throw new Error('Персонажи создаются через свои классы!');
+      throw new Error('Персонажи создаются только через свои классы!');
     }
   }
 
   levelUp() {
     const healthBefore = this.health;
     this.level += 1;
-    this.attack = Math.round(Math.max(this.attack, this.attack * (80 + healthBefore) / 100));
-    this.defence = Math.round(Math.max(this.defence, this.defence * (80 + healthBefore) / 100));
- 
+    this.attack = Math.round(Math.max(this.attack, (this.attack * (80 + healthBefore)) / 100));
+    this.defence = Math.round(Math.max(this.defence, (this.defence * (80 + healthBefore)) / 100));
+
     this.health += 80;
     if (this.health > 100) {
       this.health = 100;

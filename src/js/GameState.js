@@ -5,6 +5,7 @@ export default class GameState {
     this.statistics = [];
     this.selected = null;
     this.positions = [];
+    this.level = 1;
   }
 
   static from(object) {

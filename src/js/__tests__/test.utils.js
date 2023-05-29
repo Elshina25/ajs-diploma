@@ -1,46 +1,26 @@
-import { calcTileType } from '../utils';
+import { calcTileType, calcHealthLevel } from '../utils';
 
-test('drawning top-left border at gameplay', () => {
-  const result = calcTileType(0, 8);
-  expect(result).toEqual('top-left');
-});
+test.each([
+  [0, 8, 'top-left'],
+  [3, 8, 'top'],
+  [7, 8, 'top-right'],
+  [32, 8, 'left'],
+  [35, 8, 'center'],
+  [39, 8, 'right'],
+  [56, 8, 'bottom-left'],
+  [60, 8, 'bottom'],
+  [63, 8, 'bottom-right'],
+])(
+  ('calcTileType return value belongs to index'),
+  (index, boardSize, value) => {
+    expect(calcTileType(index, boardSize)).toBe(value);
+  },
+);
 
-test('drawning top border at gameplay', () => {
-  const result = calcTileType(3, 8);
-  expect(result).toEqual('top');
-});
-
-test('drawning top-right border at gameplay', () => {
-  const result = calcTileType(7, 8);
-  expect(result).toEqual('top-right');
-});
-
-test('drawning left border at gameplay', () => {
-  const result = calcTileType(32, 8);
-  expect(result).toEqual('left');
-});
-
-test('drawning right border at gameplay', () => {
-  const result = calcTileType(39, 8);
-  expect(result).toEqual('right');
-});
-
-test('drawning bottom-left border at gameplay', () => {
-  const result = calcTileType(56, 8);
-  expect(result).toEqual('bottom-left');
-});
-
-test('drawning bottom-right border at gameplay', () => {
-  const result = calcTileType(63, 8);
-  expect(result).toEqual('bottom-right');
-});
-
-test('drawning bottom border at gameplay', () => {
-  const result = calcTileType(60, 8);
-  expect(result).toEqual('bottom');
-});
-
-test('drawning center border at gameplay', () => {
-  const result = calcTileType(35, 8);
-  expect(result).toEqual('center');
+test.each([
+  [13, 'critical'],
+  [45, 'normal'],
+  [70, 'high'],
+])(('calcHealthLevel return value belongs to health level'), (health, value) => {
+  expect(calcHealthLevel(health)).toBe(value);
 });

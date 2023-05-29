@@ -25,7 +25,7 @@ export function* characterGenerator(allowedTypes, maxLevel) {
  * @param characterCount количество персонажей, которое нужно сформировать
  * @returns экземпляр Team, хранящий экземпляры персонажей.
  * */
-export function* generateTeam(allowedTypes, maxLevel, characterCount) {
+export function generateTeam(allowedTypes, maxLevel, characterCount) {
   if (maxLevel > 4) {
     throw new Error('Максимальный уровень 4!');
   }
@@ -35,5 +35,5 @@ export function* generateTeam(allowedTypes, maxLevel, characterCount) {
   for (let i = 1; i <= characterCount; i += 1) {
     characters.push(characterGenerator(allowedTypes, maxLevel).next().value);
   }
-  yield characters;
+  return characters;
 }
