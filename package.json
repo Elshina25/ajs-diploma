@@ -21,7 +21,7 @@
   "bugs": {
     "url": "https://github.com/netology-code/js-advanced-diploma/issues"
   },
-  "homepage": "https://github.com/netology-code/js-advanced-diploma#readme",
+  "homepage": "https://elshina25.github.io/ajs-diploma/",
   "devDependencies": {
     "@babel/cli": "^7.21.0",
     "@babel/core": "^7.21.4",
